@@ -1,0 +1,5 @@
+hello;xin chào
+school;trường học
+phone;điện thoại
+city;thành phố
+
