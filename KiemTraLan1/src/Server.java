@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 public class Server {
     private static final String PathName = "./src/dictionary.txt";
 
-    private static boolean validateString(String input) {
+    private boolean validateString(String input) {
         Pattern pattern = null;
 
         if (input.substring(0,4).equalsIgnoreCase("ADD;")) {
@@ -28,7 +28,7 @@ public class Server {
         return  pattern.matcher(input.substring(4)).matches();
     }
 
-    private static String translate(String input) {
+    private String translate(String input) {
         try {
             File myObj = new File(PathName);
             Scanner scanner = new Scanner(myObj);
@@ -60,7 +60,7 @@ public class Server {
         return "Không tìm thấy từ trong từ điển 😢😢";
     }
 
-    private static boolean checkExistsWord(String input) {
+    private boolean checkExistsWord(String input) {
         try {
             File myObj = new File(PathName);
             Scanner scanner = new Scanner(myObj);
@@ -85,7 +85,7 @@ public class Server {
         return  false;
     }
 
-    private static boolean addLineToFile(String filePath, String input) {
+    private boolean addLineToFile(String filePath, String input) {
         BufferedWriter bw = null;
         FileWriter fw = null;
 
@@ -114,7 +114,7 @@ public class Server {
         return false;
     }
 
-    private static String addWord(String filePath, String input) {
+    private String addWord(String filePath, String input) {
         //Kiểm tra cú pháp
         if (validateString(input) == false)
             return "Cú pháp thêm từ mới như sau: ADD;từ tiếng Anh;nghĩa tiếng Việt";
@@ -130,7 +130,7 @@ public class Server {
         return "Thêm từ mới thất bại.";
     }
 
-    private static String removeLineByWord(String filePath, String input) {
+    private String removeLineByWord(String filePath, String input) {
         boolean flag = false;
 
         try {
@@ -185,7 +185,7 @@ public class Server {
         return "Xóa thành công.";
     }
 
-    private static String removeWord(String filePath, String input) {
+    private String removeWord(String filePath, String input) {
         if (validateString(input) == false)
             return "Cú pháp xóa từ vựng như sau: DEL;từ tiếng Anh cần xóa";
 
