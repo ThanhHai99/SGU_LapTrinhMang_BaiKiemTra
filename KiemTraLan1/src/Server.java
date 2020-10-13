@@ -1,39 +1,58 @@
+/*
+* Run file by IntelliJ IDE
+* */
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 public class Server {
-    public static final String PathName = "./src/dictionary.txt";
+    private static final String PathName = "./src/dictionary.txt";
 
-    public static String translate(String input) {
+    private static boolean validateString(String input) {
+        Pattern pattern = null;
+
+        if (input.substring(0,4).equalsIgnoreCase("ADD;")) {
+            pattern = Pattern.compile("^[^\\s\\d\\;]+;[^\\d\\;]+");
+        } else if (input.substring(0,4).equalsIgnoreCase("DEL;")) {
+            pattern = Pattern.compile("^[^\\s\\d\\;]+");
+        }
+
+        if (pattern == null)
+            return false;
+
+        return  pattern.matcher(input.substring(4)).matches();
+    }
+
+    private static String translate(String input) {
         try {
             File myObj = new File(PathName);
-            Scanner myReader = new Scanner(myObj);
+            Scanner scanner = new Scanner(myObj);
 
             HashMap<String, String> map1 = new HashMap<String, String>();
             HashMap<String, String> map2 = new HashMap<String, String>();
 
-            while (myReader.hasNextLine()) {
-                String data = myReader.nextLine();
+            while (scanner.hasNextLine()) {
+                String data = scanner.nextLine();
                 String[] tmp = data.split(";");
                 map1.put(tmp[0], tmp[1]);
                 map2.put(tmp[1], tmp[0]);
             }
-            myReader.close();
+            scanner.close();
 
             for (Map.Entry<String, String> entry : map1.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase(input)) {
+                if (entry.getKey().equalsIgnoreCase(input))
                     return entry.getValue();
-                }
             }
             for (Map.Entry<String, String> entry : map2.entrySet()) {
-                if (entry.getKey().equalsIgnoreCase(input)) {
+                if (entry.getKey().equalsIgnoreCase(input))
                     return entry.getValue();
-                }
             }
+            
         } catch (FileNotFoundException e) {
             return "Lỗi hệ thống.";
             //e.printStackTrace();
@@ -41,42 +60,43 @@ public class Server {
         return "Không tìm thấy từ trong từ điển 😢😢";
     }
 
-    public static String addWords(String filePath, String input) {
-        String t = input.substring(4);
-        if (t.equals(";")) {
-            return "Cú pháp thêm từ mới như sau: ADD;từ tiếng Anh;nghĩa tiếng Việt";
-        }
+    private static boolean checkExistsWord(String input) {
+        try {
+            File myObj = new File(PathName);
+            Scanner scanner = new Scanner(myObj);
 
-        //dem dau cham phay sau khi cat chuoi
-        int demDauChamPhay = 0;
-        for (int i = 0; i < t.length(); i++) {
-            char tmp = t.charAt(i);
-            if(tmp == ';') {
-                demDauChamPhay++;
+            HashMap<String, String> map = new HashMap<String, String>();
+
+            while (scanner.hasNextLine()) {
+                String data = scanner.nextLine();
+                String[] tmp = data.split(";");
+                map.put(tmp[0], tmp[1]);
             }
-        }
-        if (demDauChamPhay > 1 || demDauChamPhay == 0) {
-            return "Cú pháp thêm từ mới như sau: ADD;từ tiếng Anh;nghĩa tiếng Việt";
+            scanner.close();
+
+            for (Map.Entry<String, String> entry : map.entrySet()) {
+                if (entry.getKey().equalsIgnoreCase(input))
+                    return true;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
+        return  false;
+    }
 
-        if (t.endsWith(";")) {
-            return "Cú pháp thêm từ mới như sau: ADD;từ tiếng Anh;nghĩa tiếng Việt";
-        }
-
+    private static boolean addLineToFile(String filePath, String input) {
         BufferedWriter bw = null;
         FileWriter fw = null;
 
         try {
             File file = new File(filePath);
 
-            if(!file.exists()) {
-                file.createNewFile();
-            }
+            if(!file.exists()) file.createNewFile();
 
             fw = new FileWriter(file.getAbsoluteFile(), true);
             bw = new BufferedWriter(fw);
-            bw.write(t);
+            bw.write(input.substring(4));
             bw.newLine();
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,56 +106,55 @@ public class Server {
                     bw.close();
                 if (fw != null)
                     fw.close();
-                return "Thêm từ mới thành công.";
+                return true;
             } catch (IOException ex) {
                 ex.printStackTrace();
             }
         }
+        return false;
+    }
+
+    private static String addWord(String filePath, String input) {
+        //Kiểm tra cú pháp
+        if (validateString(input) == false)
+            return "Cú pháp thêm từ mới như sau: ADD;từ tiếng Anh;nghĩa tiếng Việt";
+
+        //Kiểm tra từ tồn tại hay không
+        if (checkExistsWord(input.substring(4).split(";")[0]))
+            return "Từ này đã tồn tại";
+
+        // Xứ lý file========================================================
+        if (addLineToFile(PathName, input))
+            return "Xóa thành công";
 
         return "Thêm từ mới thất bại.";
     }
 
-    public static String removeWords(String filePath, String input) {
-        String t = input.substring(4);
-        if (t.equals(";")) {
-            return "Cú pháp xóa từ mới như sau: DEL;từ tiếng Anh cần xóa";
-        }
-
-        //dem dau cham phay sau khi cat chuoi
-        int demDauChamPhay = 0;
-        for (int i = 0; i < t.length(); i++) {
-            char tmp = t.charAt(i);
-            if(tmp == ';') {
-                demDauChamPhay++;
-            }
-        }
-        if (demDauChamPhay > 0) {
-            return "Cú pháp xóa từ mới như sau: DEL;từ tiếng Anh cần xóa";
-        }
-
+    private static String removeLineByWord(String filePath, String input) {
         boolean flag = false;
 
         try {
             File inFile = new File(filePath);
-            if (!inFile.isFile()) {
-                return "Parameter is not an existing file";
-            }
+            if (!inFile.isFile())
+                return "Lỗi file";
+
             //Construct the new file that will later be renamed to the original filename.
             File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
 
             BufferedReader br = new BufferedReader(new FileReader(filePath));
             PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
 
-            String line = null;
+            String line = "";
 
             //Read from the original file and write to the new
             //unless content matches data to be removed.
 
             while ((line = br.readLine()) != null) {
                 String[] tmp = line.split(";");
-                if (tmp[0].trim().equalsIgnoreCase(t)) {
+                if (tmp[0].trim().equalsIgnoreCase(input.substring(4))) {
                     flag = true;
                     continue;
+
                 } else {
                     pw.println(line);
                     pw.flush();
@@ -145,13 +164,12 @@ public class Server {
             br.close();
 
             //Delete the original file
-            if (!inFile.delete()) {
-                return "Could not delete file";
-            }
+            if (!inFile.delete())
+                return "Lỗi file";
 
             //Rename the new file to the filename the original file had.
             if (!tempFile.renameTo(inFile))
-                System.out.println("Could not rename file");
+                System.out.println("Lỗi file");
 
         }
         catch (FileNotFoundException ex) {
@@ -161,14 +179,20 @@ public class Server {
             ex.printStackTrace();
         }
 
-        if (flag == false) {
+        if (flag == false)
             return "Không tìm thấy từ cần xóa.";
-        }
 
         return "Xóa thành công.";
     }
 
-    public Server(int port) {
+    private static String removeWord(String filePath, String input) {
+        if (validateString(input) == false)
+            return "Cú pháp xóa từ vựng như sau: DEL;từ tiếng Anh cần xóa";
+
+        return removeLineByWord(PathName, input);
+    }
+
+    private Server(int port) {
         try {
             ServerSocket server = new ServerSocket(port);
             System.out.println("Server started");
@@ -186,13 +210,12 @@ public class Server {
                 //Receiver data from client
                 line = in.readLine();
 
-                if (line.startsWith("ADD;")) {
-                    dataSend = addWords(PathName, line);
-                }
-                else if (line.startsWith("DEL;")) {
-                    dataSend = removeWords(PathName, line);
-                } else if (line.equalsIgnoreCase("bye")) {
+                if (line.equalsIgnoreCase("bye")) {
                     break;
+                } else if (line.startsWith("ADD;")) {
+                    dataSend = addWord(PathName, line);
+                } else if (line.startsWith("DEL;")) {
+                    dataSend = removeWord(PathName, line);
                 } else {
                     dataSend = translate(line);
                 }
@@ -208,7 +231,7 @@ public class Server {
             out.close();
             socket.close();
             server.close();
-            System.out.println("Server closed");
+            System.err.println("Server closed");
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -3,7 +3,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 
 public class Client {
-    public  Client(String address, int port) {
+    private  Client(String address, int port) {
         try {
             Socket socket = new Socket(address, port);
             System.out.println("Connect to server successful");
@@ -18,9 +18,8 @@ public class Client {
                 //input data
                 System.out.print("Enter keyword to translate: ");
                 line = stdIn.readLine();
-                if (line.equalsIgnoreCase("bye")) {
+                if (line.equalsIgnoreCase("bye"))
                     break;
-                }
 
                 //Client send data to server
                 out.write(line);
@@ -29,9 +28,8 @@ public class Client {
                 
                 //Receiver data from server
                 String dt = in.readLine();
-                if (dt != null) {
-                    System.out.println("Client - Ket qua: " + dt);
-                }
+                if (dt != null)
+                    System.out.println("Ket qua: " + dt);
             } while (!line.equalsIgnoreCase("bye"));
 
             //CLOSE
