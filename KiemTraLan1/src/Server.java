@@ -1,7 +1,3 @@
-/*
-* Run file by IntelliJ IDE
-* */
-
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -96,8 +92,8 @@ public class Server {
 
             fw = new FileWriter(file.getAbsoluteFile(), true);
             bw = new BufferedWriter(fw);
-            bw.write(input.substring(4));
             bw.newLine();
+            bw.write(input.substring(4));
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -124,42 +120,44 @@ public class Server {
             return "Từ này đã tồn tại";
 
         // Xứ lý file========================================================
-        if (addLineToFile(PathName, input))
-            return "Xóa thành công";
+        if (addLineToFile(filePath, input))
+            return "Thêm từ mới thành công";
 
         return "Thêm từ mới thất bại.";
     }
 
     private String removeLineByWord(String filePath, String input) {
-        boolean flag = false;
-
         try {
             File inFile = new File(filePath);
-            if (!inFile.isFile())
-                return "Lỗi file";
+            if (!inFile.isFile())  return "Lỗi file";
 
-            //Construct the new file that will later be renamed to the original filename.
             File tempFile = new File(inFile.getAbsolutePath() + ".tmp");
 
             BufferedReader br = new BufferedReader(new FileReader(filePath));
             PrintWriter pw = new PrintWriter(new FileWriter(tempFile));
 
             String line = "";
-
-            //Read from the original file and write to the new
-            //unless content matches data to be removed.
+            boolean f = false; // run once
+            boolean status = false;
 
             while ((line = br.readLine()) != null) {
                 String[] tmp = line.split(";");
-                if (tmp[0].trim().equalsIgnoreCase(input.substring(4))) {
-                    flag = true;
-                    continue;
-
-                } else {
-                    pw.println(line);
+                if (tmp[0].trim().equalsIgnoreCase(input.substring(4)) == false) {
+                    if (!f) {
+                        pw.print(line.trim());
+                        pw.flush();
+                        f=true;
+                        continue;
+                    }
+                    pw.printf("\n%s", line.trim());
                     pw.flush();
                 }
+
+                if (tmp[0].trim().equalsIgnoreCase(input.substring(4))) {
+                    status=true;
+                }
             }
+
             pw.close();
             br.close();
 
@@ -171,6 +169,8 @@ public class Server {
             if (!tempFile.renameTo(inFile))
                 System.out.println("Lỗi file");
 
+            if (status == true)
+                return "Xóa thành công.";
         }
         catch (FileNotFoundException ex) {
             ex.printStackTrace();
@@ -179,17 +179,14 @@ public class Server {
             ex.printStackTrace();
         }
 
-        if (flag == false)
-            return "Không tìm thấy từ cần xóa.";
-
-        return "Xóa thành công.";
+        return "Không tìm thấy từ cần xóa.";
     }
 
     private String removeWord(String filePath, String input) {
         if (validateString(input) == false)
             return "Cú pháp xóa từ vựng như sau: DEL;từ tiếng Anh cần xóa";
 
-        return removeLineByWord(PathName, input);
+        return removeLineByWord(filePath, input);
     }
 
     private Server(int port) {

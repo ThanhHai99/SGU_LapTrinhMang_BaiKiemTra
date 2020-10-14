@@ -1,4 +1,4 @@
 hello;xin chào
 school;trường học
 city;thành phố
-home;nhà
+happy;vui mừng
