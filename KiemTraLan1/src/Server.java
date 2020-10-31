@@ -201,7 +201,7 @@ public class Server {
             Socket socket = server.accept();
             System.out.println("Client accepted");
             
-            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));;
+            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             
             String line = "";
@@ -239,6 +239,6 @@ public class Server {
     }
 
     public static void main(String[] args) {
-       Server server = new Server(5000);
+        Server server = new Server(5000);
     }
 }
